@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "rootDir": "./src",
+    // The entry point for all of our TypeScript files (make sure all .ts files are stored in a subdirectory of this!)
+    "outDir": "./dist",
+    // The directory which we'll be exporting our compiled JavaScript files to
+    "target": "es6",
+    "sourceMap": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "preserveConstEnums": true,
+    "importHelpers": true,
+    "lib": [
+      "ESNext"
+    ],
+    // , "DOM" The libraries we wish to use in TS (ESNext being the latest version of JavaScript, and DOM being JavaScript DOM libraries - like console.log)
+    "strict": true
+    // Stipulating we want strict mode on. I personally would recommend this to get the most out of TS - another great article on this here: https://dev.to/briwa/how-strict-is-typescript-s-strict-mode-311a
+  },
+  "typeAcquisition": {
+    "enable": true,
+  },
+  "include": [
+    "./src/**/*",
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
