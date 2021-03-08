@@ -66,7 +66,7 @@ export const openFlagToChars = (flags: number): string => {
 };
 
 /**
- * Match all occurrences of  // or \\  in strings with depending on pathSep or OS
+ * Match all occurrences of  // or \\  in strings with dependence on pathSep for OS
  */
 const doubleSlashMatcher = new RegExp(
   pathSep.repeat(pathSep === '\\' ? 4 : 2),
@@ -116,7 +116,7 @@ export const ensureNoTrailingSlash = (path: string): string =>
  * reject will ether have nonzero code value or Error object
  * @param child
  */
-export const promiseFromChildProcess = (child: ChildProcess) =>
+export const promiseFromChildProcess = (child: ChildProcess): Promise<number | Error> =>
   new Promise((resolve, reject) => {
     child.addListener('error', reject);
     child.addListener('exit', (code: number, signal: number) => {
@@ -129,10 +129,10 @@ export const promiseFromChildProcess = (child: ChildProcess) =>
   });
 
 /**
- * Execute bind mount of src on target with mount options
+ * Execute bind mount of src on target with mount options asynchronously
  * @param src Source folder
  * @param target Target folder
- * @param mntOpts options to pass to mount -o
+ * @param mntOpts options to pass to mount -o defaults to ['ro', 'noatime', 'nodiratime']
  * @returns true on success otherwise false
  */
 export const mountFolder = async (
@@ -156,7 +156,7 @@ export const mountFolder = async (
 };
 
 /**
- * Unmount folder from host fs
+ * Unmount folder from host fs asynchronously
  * @param target folder to unmount
  * @returns true on success otherwise false
  */
@@ -177,6 +177,7 @@ export const umountFolder = async (target: string): Promise<boolean> => {
 /**
  * Delay for delay milliseconds then resolve
  * @param delay Duration in milliseconds before resolving promise
+ * @returns Prom that resolves after specified delay
  */
 export const delay = async (delay: number): Promise<void> =>
   new Promise((resolve) => {
