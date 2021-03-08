@@ -11,7 +11,10 @@ This filesystem implements **very** basic INode and file descriptor tracking.
 General utilities are located in _utils.ts_. Fuse or filesystem related items are in fuseUtils.ts. Fortune example items are
 located in _fuseUtils.ts_. The main entry point is _index.ts_.
 
-This project attempts to mount the filesystem on _mnt_ in the same folder as the running script. 
+This project attempts to mount the filesystem on _mnt_ in the same folder as the running script.
+
+The system will allow up to 75% of available NodeJs heap memory to be used by files.
+It simulates blocks as 4KB blocks which is the minimum any nonempty file will occupy.
 
 ParFuse also has a mechanism to issue commands to the filesystem by writing to _/proc/cmd_.
 Contents in /proc/cmd are processed line by line.
