@@ -215,7 +215,7 @@ export const umountFolder = async (target: string): Promise<boolean> => {
 };
 
 /**
- * Run external command asynchronously capturing output and exit code 
+ * Run external command asynchronously capturing output and exit code
  * @param cmd path and parameters for command to run
  */
 export const runCmdAsync = async (cmd: string): Promise<IExecResult> => {
