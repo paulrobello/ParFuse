@@ -28,7 +28,7 @@ import {
   mkDev,
   ST_NOATIME,
   ST_NODIRATIME,
-  fuseNoopCb
+  fuseNoopCb, mntChroot, unmountChroot
 } from './fuseUtils';
 import {
   DebugLevel,
@@ -37,7 +37,7 @@ import {
   getNameFromPath,
   isDirectory,
   isRegularFile,
-  openFlagToChars
+  openFlagToChars, runCmdAsync
 } from './utils';
 
 const debugLevel: DebugLevel = process.env.trace === '1' ? 'trace' : 'none'; // set to trace for logging
@@ -95,6 +95,7 @@ const init = function (cb: FuseCallback) {
   mkFile(pathSep, 'test', 'Hello World!\n');
   mkSymLink(pathSep, 'testLink', './test');
 
+  // @ts-ignore
   // mntChroot(this.mnt);
 
   return process.nextTick(cb, 0);
