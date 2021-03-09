@@ -109,21 +109,61 @@ export const ensureNoTrailingSlash = (path: string): string =>
     ensureStartingSlash(path.endsWith(pathSep) ? path.slice(0, -1) : path)
   );
 
+export interface IExecResult {
+  code: number,
+  error: Error | null,
+  stdOut: string,
+  stdErr: string
+}
+
 /**
  * Returns a Promise that resolves on child exit with code === 0 and rejects on
  * child error or exit code !== 0
  * resolve will always have param value of 0
  * reject will ether have nonzero code value or Error object
- * @param child
+ * @param child ChildProcess returned from exec
+ * @param captureOutput set to true to return stdout and stderr from child
  */
-export const promiseFromChildProcess = (child: ChildProcess): Promise<number | Error> =>
+export const promiseFromChildProcess = (child: ChildProcess, captureOutput = false): Promise<IExecResult> =>
   new Promise((resolve, reject) => {
-    child.addListener('error', reject);
+    let stdOut = '';
+    let stdErr = '';
+    if (captureOutput) {
+      if (child.stdout) {
+        child.stdout.on('data', (data) => {
+          if (data && (stdOut.length + data.length < 4096)) {
+            stdOut += data.toString();
+          }
+        });
+      }
+      if (child.stderr) {
+        child.stderr.on('data', (data) => {
+          if (data && stdErr.length + data.length < 4096) {
+            stdErr += data.toString();
+          }
+        });
+      }
+    }
+    child.addListener('error', (err: Error) => {
+      const ret = {
+        code: -1,
+        error: err,
+        stdOut,
+        stdErr
+      };
+      reject(ret);
+    });
     child.addListener('exit', (code: number, signal: number) => {
+      const ret = {
+        code,
+        error: null,
+        stdOut,
+        stdErr
+      };
       if (code === 0) {
-        resolve(code);
+        resolve(ret);
       } else {
-        reject(code);
+        reject(ret);
       }
     });
   });
@@ -146,11 +186,11 @@ export const mountFolder = async (
   }  ${src} ${target}${src}`;
   try {
     const child = exec(cmd);
-    const result = await promiseFromChildProcess(child);
-    if (debugLevel === 'trace') console.log('mountFolder promise complete: ' + result, cmd);
+    const result = await promiseFromChildProcess(child, true);
+    if (debugLevel === 'trace') console.log('mountFolder promise complete', result, cmd);
     return true;
   } catch (err: any) {
-    if (debugLevel === 'trace') console.error('mountFolder promise rejected: ' + err, cmd);
+    if (debugLevel === 'trace') console.error('mountFolder promise rejected', err, cmd);
     return false;
   }
 };
@@ -165,12 +205,28 @@ export const umountFolder = async (target: string): Promise<boolean> => {
   const cmd = `umount ${target}`;
   try {
     const child = exec(cmd);
-    const result = await promiseFromChildProcess(child);
-    if (debugLevel === 'trace') console.log('umountFolder promise complete: ' + result, cmd);
+    const result = await promiseFromChildProcess(child, true);
+    if (debugLevel === 'trace') console.log('umountFolder promise complete', result, cmd);
     return true;
   } catch (err: any) {
-    if (debugLevel === 'trace') console.error('umountFolder promise rejected: ' + err, cmd);
+    if (debugLevel === 'trace') console.error('umountFolder promise rejected', err, cmd);
     return false;
+  }
+};
+
+/**
+ * Run external command asynchronously capturing output and exit code 
+ * @param cmd path and parameters for command to run
+ */
+export const runCmdAsync = async (cmd: string): Promise<IExecResult> => {
+  const child = exec(cmd);
+  try {
+    const result = await promiseFromChildProcess(child, true);
+    if (debugLevel === 'trace') console.log('runCmdAsync promise complete', result, cmd);
+    return result;
+  } catch (err: any) {
+    if (debugLevel === 'trace') console.error('runCmdAsync promise rejected', err, cmd);
+    return err;
   }
 };
 
