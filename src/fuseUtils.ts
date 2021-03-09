@@ -527,7 +527,7 @@ export const chRootFolders = [
  * @param root Fuse Fs root folder. Should be absolute.
  * @returns true if all paths are successfully mounted
  */
-const mntChroot = async (root: string): Promise<boolean> => {
+export const mntChroot = async (root: string): Promise<boolean> => {
   let success = true;
   for (const src of chRootFolders) {
     success = success && (await mountFolder(src, root));
@@ -539,7 +539,7 @@ const mntChroot = async (root: string): Promise<boolean> => {
  * @param root Fuse Fs root folder. Should be absolute.
  * @returns true if all paths are successfully unmounted
  */
-const unmountChroot = async (root: string): Promise<boolean> => {
+export const unmountChroot = async (root: string): Promise<boolean> => {
   let success = true;
 
   for (const src of chRootFolders.reverse()) {
