@@ -86,17 +86,23 @@ const init = function(cb: FuseCallback) {
   mkDir(pathSep + "usr", "lib");
   mkDir(pathSep, "etc");
   mkDir(pathSep, "proc");
+  
+  mkDir(pathSep, "home");
+  mkDir(pathSep + "home", "jailbird");
+  chown(pathSep + "home" + pathSep + "jailbird", 1002, 1002, fuseNoopCb);
 
   mkDev(pathSep + "dev", "null", 259, 8630);
   mkDev(pathSep + "dev", "tty", 1280, 8630);
   mkDev(pathSep + "dev", "zero", 261, 8630);
   mkDev(pathSep + "dev", "random", 264, 8630);
 
+  mkDir(pathSep + "dev", "pts");
+
   mkFile(pathSep, "test", "Hello World!\n");
   mkSymLink(pathSep, "testLink", "./test");
 
   // @ts-ignore
-  // mntChroot(this.mnt);
+  mntChroot(this.mnt);
 
   return process.nextTick(cb, 0);
 };
@@ -724,7 +730,7 @@ const ops = {
   utimens /* Called when the atime/mtime of a file is being changed */,
   mknod /* Called when the a new device file is being made */,
   statfs /* Called when the filesystem is being stat'ed */,
-  mnt: __dirname + "/mnt", /* host folder to mount fuse fs on  */
+  mnt: '/parjail', /* host folder to mount fuse fs on  */
   mkMnt: true /* set to true to create mount point if it does not exist */
 };
 
@@ -759,16 +765,16 @@ Fuse.isConfigured((err: Error, fuseIsConfigured: boolean) => {
 const fuse = new Fuse(ops.mnt, ops, {
   debug: false,
   displayFolder: false,
-  autoUnmount: true,
+  autoUnmount: false,
   dev: true, // There is a known bug that dev param is ignored when autoUnmount is true. Requires privileged user
   suid: true, // There is a known bug that suid param is ignored when autoUnmount is true. Requires privileged user
   useIno: true, // Use inodes provided by our stat
   force: true,
   kernelCache: false,
   defaultPermissions: true,
-  fsname: "ParFS"
+  fsname: "ParFS",
   // allowRoot: true // requires privileged user
-  // allowOther: true // requires privileged user
+   allowOther: true // requires privileged user
 });
 fuse.mount((err?: Error) => {
   if (err) {
@@ -780,7 +786,11 @@ fuse.mount((err?: Error) => {
 
 // catch SIGINT and attempt to unmount
 process.once("SIGINT", async () => {
-  // await unmountChroot(fuse.mnt);
+  try {
+    await unmountChroot(ops.mnt);
+  } catch(err: any) {
+    console.error(err);
+  }
   fuse.unmount((err?: Error) => {
     if (err) {
       console.log("filesystem at " + fuse.mnt + " not unmounted", err);
