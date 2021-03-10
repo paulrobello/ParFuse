@@ -180,9 +180,9 @@ export const mountFolder = async (
   target: string,
   mntOpts: string[] = ['ro', 'noatime', 'nodiratime']
 ): Promise<boolean> => {
-  target = ensureTrailingSlash(target);
+  target = ensureNoTrailingSlash(target);
   const cmd = `mount --bind ${
-    mntOpts.length ? '-o ' + mntOpts.join(' ') : ''
+    mntOpts.length ? '-o ' + mntOpts.join(',') : ''
   }  ${src} ${target}${src}`;
   try {
     const child = exec(cmd);
