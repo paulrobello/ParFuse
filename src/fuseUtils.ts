@@ -113,7 +113,6 @@ export const adjustBlocksUsed = (numBlocks: number): number => {
     0,
     Math.min(FsStats.blocks_used, FsStats.total_blocks)
   );
-  console.log(FsStats);
   return FsStats.total_blocks - FsStats.blocks_used;
 };
 

@@ -13,9 +13,7 @@ export const getFortune = async (): Promise<string> => {
       fortunes = response.body.split(/^%\r?\n/m);
     }
     return fortunes[Math.floor(Math.random() * fortunes.length)];
-    // console.log(fortunes);
   } catch (error) {
-    // console.log(error.response.body);
     return 'Error fetching fortunes';
   }
 };

@@ -386,7 +386,7 @@ const create = (path: string, mode: number, cb: FuseCallback) => {
     node = mkDir(p.join(pathSep), name, mode);
   }
   if (!node) {
-    console.log("create failed. No node");
+    if (debugLevel === "trace") console.error("create failed. No node");
     return process.nextTick(cb, Fuse.ENOENT);
   }
   const f = mkFd(node);
@@ -410,7 +410,7 @@ const mkdir = (path: string, mode: number, cb: FuseCallback) => {
   }
   node = mkDir(p.join(pathSep), name, mode | constants.S_IFDIR);
   if (!node) {
-    console.log("create failed. No node");
+    if (debugLevel === "trace") console.error("create failed. No node");
     return process.nextTick(cb, Fuse.ENOENT);
   }
   const f = mkFd(node);
@@ -487,7 +487,7 @@ const unlink = (path: string, cb: FuseCallback) => {
   const parentNode = getPathNode(parentPath);
   if (!parentNode) {
     if (debugLevel === "trace")
-      console.log(
+      console.error(
         "unlink unable to find parent node (%s, %s)",
         path,
         parentPath
@@ -513,7 +513,7 @@ const rmdir = (path: string, cb: FuseCallback) => {
   const parentNode = getPathNode(parentPath);
   if (!parentNode) {
     if (debugLevel === "trace")
-      console.log(
+      console.error(
         "rmdir unable to find parent node (%s, %s)",
         path,
         parentPath
@@ -536,7 +536,7 @@ const rename = (src: string, dst: string, cb: FuseCallback) => {
   const srcParentNode: Node | null = getPathNode(srcParentPath);
   if (!srcParentNode) {
     if (debugLevel === "trace")
-      console.log(
+      console.error(
         "rename parent path node not found (%s, %s)",
         src,
         srcParentPath
@@ -553,7 +553,7 @@ const rename = (src: string, dst: string, cb: FuseCallback) => {
   const dstParentNode: Node | null = getPathNode(dstParentPath);
   if (!dstParentNode) {
     if (debugLevel === "trace")
-      console.log(
+      console.error(
         "rename dst path to node failed to find parent (%s, %s, %s)",
         dst,
         dstParentPath,
