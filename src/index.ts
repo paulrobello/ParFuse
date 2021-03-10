@@ -1,9 +1,9 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const Fuse = require('fuse-native');
+const Fuse = require("fuse-native");
 
-import { sep as pathSep } from 'path';
-import { constants } from 'fs';
-import { newFortune } from './fortune';
+import { sep as pathSep } from "path";
+import { mkdirSync, existsSync, constants } from "fs";
+import { newFortune } from "./fortune";
 import {
   addNodeToParent,
   addLink,
@@ -29,7 +29,7 @@ import {
   ST_NOATIME,
   ST_NODIRATIME,
   fuseNoopCb, mntChroot, unmountChroot
-} from './fuseUtils';
+} from "./fuseUtils";
 import {
   DebugLevel,
   dec2Oct,
@@ -38,9 +38,9 @@ import {
   isDirectory,
   isRegularFile,
   openFlagToChars, runCmdAsync
-} from './utils';
+} from "./utils";
 
-const debugLevel: DebugLevel = process.env.trace === '1' ? 'trace' : 'none'; // set to trace for logging
+const debugLevel: DebugLevel = process.env.trace === "1" ? "trace" : "none"; // set to trace for logging
 
 /**
  * Used to issue commands to fs via writing commands to /proc/cmd
@@ -49,16 +49,16 @@ const debugLevel: DebugLevel = process.env.trace === '1' ? 'trace' : 'none'; // 
  */
 const procWritten = async (path: string, node: Node): Promise<void> => {
   const name = getNameFromPath(path);
-  if (debugLevel === 'trace') console.log('procWritten(%s, %s)', path, name);
-  if (name !== 'cmd') return;
+  if (debugLevel === "trace") console.log("procWritten(%s, %s)", path, name);
+  if (name !== "cmd") return;
   if (!node.content) return;
   const content = node.content.toString().trim().split(/\r?\n/);
   for (const line of content) {
-    if (debugLevel === 'trace') console.log('procWritten line(%s)', line);
-    if (line === 'newFortune') {
+    if (debugLevel === "trace") console.log("procWritten line(%s)", line);
+    if (line === "newFortune") {
       await newFortune();
-    } else if (line.startsWith('delay')) {
-      const duration = line.split(' ');
+    } else if (line.startsWith("delay")) {
+      const duration = line.split(" ");
       if (duration.length !== 2) {
         continue;
       }
@@ -68,32 +68,32 @@ const procWritten = async (path: string, node: Node): Promise<void> => {
   unlink(path, fuseNoopCb);
 };
 
-const init = function (cb: FuseCallback) {
-  if (debugLevel === 'trace') console.log('init()');
-  const rootNode = mkDir('', '');
-  setPathNode('', rootNode);
+const init = function(cb: FuseCallback) {
+  if (debugLevel === "trace") console.log("init()");
+  const rootNode = mkDir("", "");
+  setPathNode("", rootNode);
   setPathNode(pathSep, rootNode);
-  mkDir(pathSep, 'dev');
-  mkDir(pathSep + 'pts', 'pts');
-  mkDir(pathSep, 'bin');
-  mkDir(pathSep, 'lib');
-  mkDir(pathSep, 'lib64');
-  mkDir(pathSep, 'var');
-  mkDir(pathSep + 'log', 'log');
-  mkDir(pathSep, 'usr');
-  mkDir(pathSep + 'usr', 'bin');
-  mkDir(pathSep + 'usr', 'share');
-  mkDir(pathSep + 'usr', 'lib');
-  mkDir(pathSep, 'etc');
-  mkDir(pathSep, 'proc');
+  mkDir(pathSep, "dev");
+  mkDir(pathSep + "pts", "pts");
+  mkDir(pathSep, "bin");
+  mkDir(pathSep, "lib");
+  mkDir(pathSep, "lib64");
+  mkDir(pathSep, "var");
+  mkDir(pathSep + "log", "log");
+  mkDir(pathSep, "usr");
+  mkDir(pathSep + "usr", "bin");
+  mkDir(pathSep + "usr", "share");
+  mkDir(pathSep + "usr", "lib");
+  mkDir(pathSep, "etc");
+  mkDir(pathSep, "proc");
 
-  mkDev(pathSep + 'dev', 'null', 259, 8630);
-  mkDev(pathSep + 'dev', 'tty', 1280, 8630);
-  mkDev(pathSep + 'dev', 'zero', 261, 8630);
-  mkDev(pathSep + 'dev', 'random', 264, 8630);
+  mkDev(pathSep + "dev", "null", 259, 8630);
+  mkDev(pathSep + "dev", "tty", 1280, 8630);
+  mkDev(pathSep + "dev", "zero", 261, 8630);
+  mkDev(pathSep + "dev", "random", 264, 8630);
 
-  mkFile(pathSep, 'test', 'Hello World!\n');
-  mkSymLink(pathSep, 'testLink', './test');
+  mkFile(pathSep, "test", "Hello World!\n");
+  mkSymLink(pathSep, "testLink", "./test");
 
   // @ts-ignore
   // mntChroot(this.mnt);
@@ -101,7 +101,7 @@ const init = function (cb: FuseCallback) {
   return process.nextTick(cb, 0);
 };
 const readdir = (path: string, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('readdir(%s)', path);
+  if (debugLevel === "trace") console.log("readdir(%s)", path);
   const node = getPathNode(path);
   if (!node) {
     return process.nextTick(cb, Fuse.ENOENT);
@@ -118,8 +118,8 @@ const readdir = (path: string, cb: FuseCallback) => {
   );
 };
 const access = (path: string, mode: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace')
-    console.log('access(%s, %d(%s))', path, mode, dec2Oct(mode));
+  if (debugLevel === "trace")
+    console.log("access(%s, %d(%s))", path, mode, dec2Oct(mode));
   const node = getPathNode(path);
   if (!node) {
     return process.nextTick(cb, Fuse.ENOENT);
@@ -128,7 +128,7 @@ const access = (path: string, mode: number, cb: FuseCallback) => {
   return process.nextTick(cb, 0);
 };
 const getattr = (path: string, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('getattr(%s)', path);
+  if (debugLevel === "trace") console.log("getattr(%s)", path);
   const node = getPathNode(path);
   if (!node) {
     return process.nextTick(cb, Fuse.ENOENT);
@@ -136,17 +136,17 @@ const getattr = (path: string, cb: FuseCallback) => {
   return process.nextTick(cb, 0, node.stat);
 };
 const fgetattr = (fd: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('fgetattr(%d)', fd);
+  if (debugLevel === "trace") console.log("fgetattr(%d)", fd);
   const node = getFdNode(fd);
   if (!node) {
-    if (debugLevel === 'trace') console.log('fgetattr fd not found!');
+    if (debugLevel === "trace") console.log("fgetattr fd not found!");
     return process.nextTick(cb, Fuse.EBADF);
   }
   return process.nextTick(cb, 0, node.stat);
 };
 const open = (path: string, flags: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace')
-    console.log('open(%s, %d[%s])', path, flags, openFlagToChars(flags));
+  if (debugLevel === "trace")
+    console.log("open(%s, %d[%s])", path, flags, openFlagToChars(flags));
   const node = getPathNode(path);
   if (!node) {
     return process.nextTick(cb, Fuse.ENOENT);
@@ -162,8 +162,8 @@ const open = (path: string, flags: number, cb: FuseCallback) => {
   return process.nextTick(cb, 0, f);
 };
 const opendir = (path: string, flags: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace')
-    console.log('opendir(%s, %d[%s])', path, flags, openFlagToChars(flags));
+  if (debugLevel === "trace")
+    console.log("opendir(%s, %d[%s])", path, flags, openFlagToChars(flags));
   const node = getPathNode(path);
   if (!node) {
     return process.nextTick(cb, Fuse.ENOENT);
@@ -180,25 +180,25 @@ const opendir = (path: string, flags: number, cb: FuseCallback) => {
 };
 
 const release = (path: string, fd: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('release(%s, %d)', path, fd);
+  if (debugLevel === "trace") console.log("release(%s, %d)", path, fd);
   const node = getFdNode(fd);
   if (!node) {
-    if (debugLevel === 'trace') console.log('release fd not found!');
+    if (debugLevel === "trace") console.log("release fd not found!");
     return process.nextTick(cb, Fuse.EBADF);
   }
 
   freeFd(fd);
-  if (path.startsWith(pathSep + 'proc')) {
+  if (path.startsWith(pathSep + "proc")) {
     procWritten(path, node);
   }
   return process.nextTick(cb, 0);
 };
 
 const releasedir = (path: string, fd: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('releasedir(%s, %d)', path, fd);
+  if (debugLevel === "trace") console.log("releasedir(%s, %d)", path, fd);
   const node = getFdNode(fd);
   if (!node) {
-    if (debugLevel === 'trace') console.log('releasedir fd not found!');
+    if (debugLevel === "trace") console.log("releasedir fd not found!");
     return process.nextTick(cb, Fuse.EBADF);
   }
   freeFd(fd);
@@ -206,7 +206,7 @@ const releasedir = (path: string, fd: number, cb: FuseCallback) => {
 };
 
 const truncate = (path: string, size: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('truncate(%s, %d)', path, size);
+  if (debugLevel === "trace") console.log("truncate(%s, %d)", path, size);
   const node = getPathNode(path);
   if (!node) {
     return process.nextTick(cb, Fuse.ENOENT);
@@ -220,10 +220,10 @@ const ftruncate = (
   size: number,
   cb: FuseCallback
 ) => {
-  if (debugLevel === 'trace') console.log('truncate(%s, %d)', path, fd);
+  if (debugLevel === "trace") console.log("truncate(%s, %d)", path, fd);
   const node = getFdNode(fd);
   if (!node) {
-    if (debugLevel === 'trace') console.log('ftruncate fd not found!');
+    if (debugLevel === "trace") console.log("ftruncate fd not found!");
     return process.nextTick(cb, Fuse.EBADF);
   }
   truncateFile(node, size);
@@ -237,11 +237,11 @@ const read = (
   pos: number,
   cb: FuseCallback
 ) => {
-  if (debugLevel === 'trace')
-    console.log('read(%s, %d, %d, %d)', path, fd, len, pos);
+  if (debugLevel === "trace")
+    console.log("read(%s, %d, %d, %d)", path, fd, len, pos);
   const node = getFdNode(fd);
   if (!node) {
-    if (debugLevel === 'trace') console.log('read fd not found!');
+    if (debugLevel === "trace") console.log("read fd not found!");
     return process.nextTick(cb, Fuse.EBADF);
   }
   if (!node.content) return process.nextTick(cb, 0);
@@ -251,10 +251,10 @@ const read = (
   return process.nextTick(cb, str.length);
 };
 const flush = (path: string, fd: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('flush(%s, %d)', path, fd);
+  if (debugLevel === "trace") console.log("flush(%s, %d)", path, fd);
   const node = getFdNode(fd);
   if (!node) {
-    if (debugLevel === 'trace') console.log('flush fd not found!');
+    if (debugLevel === "trace") console.log("flush fd not found!");
     return process.nextTick(cb, Fuse.EBADF);
   }
 
@@ -269,8 +269,8 @@ const fsync = (
   datasync: boolean,
   cb: FuseCallback
 ) => {
-  if (debugLevel === 'trace')
-    console.log('fsync(%s, %d, %s)', path, fd, datasync);
+  if (debugLevel === "trace")
+    console.log("fsync(%s, %d, %s)", path, fd, datasync);
   return flush(path, fd, cb);
 };
 
@@ -280,11 +280,11 @@ const fsyncDir = (
   datasync: boolean,
   cb: FuseCallback
 ) => {
-  if (debugLevel === 'trace')
-    console.log('fsyncDir(%s, %d, %s)', path, fd, datasync);
+  if (debugLevel === "trace")
+    console.log("fsyncDir(%s, %d, %s)", path, fd, datasync);
   const node = getFdNode(fd);
   if (!node) {
-    if (debugLevel === 'trace') console.log('fsyncDir fd not found!');
+    if (debugLevel === "trace") console.log("fsyncDir fd not found!");
     return process.nextTick(cb, Fuse.EBADF);
   }
 
@@ -292,7 +292,7 @@ const fsyncDir = (
 };
 
 const listxattr = (path: string, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('listxattr(%s)', path);
+  if (debugLevel === "trace") console.log("listxattr(%s)", path);
   const node = getPathNode(path);
   if (!node) {
     return process.nextTick(cb, fuse.ENOENT);
@@ -309,8 +309,8 @@ const getxattr = (
   position: number,
   cb: FuseCallback
 ) => {
-  if (debugLevel === 'trace')
-    console.log('getxattr(%s, %s, %d)', path, name, position);
+  if (debugLevel === "trace")
+    console.log("getxattr(%s, %s, %d)", path, name, position);
   const node = getPathNode(path);
   if (!node) {
     return process.nextTick(cb, fuse.ENOENT);
@@ -329,9 +329,9 @@ const setxattr = (
   flags: number,
   cb: FuseCallback
 ) => {
-  if (debugLevel === 'trace')
+  if (debugLevel === "trace")
     console.log(
-      'setxattr(%s, %s, %s, %d, %d)',
+      "setxattr(%s, %s, %s, %d, %d)",
       path,
       name,
       value,
@@ -343,7 +343,7 @@ const setxattr = (
     return process.nextTick(cb, fuse.ENOENT);
   }
   // ignore acl related extended attributes
-  if (name === 'system.posix_acl_access') {
+  if (name === "system.posix_acl_access") {
     return process.nextTick(cb, 0);
   }
   if (!node.xattr) {
@@ -355,7 +355,7 @@ const setxattr = (
 };
 
 const removexattr = (path: string, name: string, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('removexattr(%s, %s)', path, name);
+  if (debugLevel === "trace") console.log("removexattr(%s, %s)", path, name);
   const node = getPathNode(path);
   if (!node) {
     return process.nextTick(cb, fuse.ENOENT);
@@ -369,8 +369,8 @@ const removexattr = (path: string, name: string, cb: FuseCallback) => {
 };
 
 const create = (path: string, mode: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace')
-    console.log('create(%s, %d(%s))', path, mode, dec2Oct(mode));
+  if (debugLevel === "trace")
+    console.log("create(%s, %d(%s))", path, mode, dec2Oct(mode));
   let node: Node | null = null;
   const p = path.split(pathSep);
   const name = p.pop();
@@ -381,12 +381,12 @@ const create = (path: string, mode: number, cb: FuseCallback) => {
     return process.nextTick(cb, Fuse.ENAMETOOLONG);
   }
   if (isRegularFile(mode)) {
-    node = mkFile(p.join(pathSep), name, '', mode);
+    node = mkFile(p.join(pathSep), name, "", mode);
   } else if (isDirectory(mode)) {
     node = mkDir(p.join(pathSep), name, mode);
   }
   if (!node) {
-    console.log('create failed. No node');
+    console.log("create failed. No node");
     return process.nextTick(cb, Fuse.ENOENT);
   }
   const f = mkFd(node);
@@ -397,8 +397,8 @@ const create = (path: string, mode: number, cb: FuseCallback) => {
 };
 
 const mkdir = (path: string, mode: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace')
-    console.log('mkdir(%s, %d(%s))', path, mode, dec2Oct(mode));
+  if (debugLevel === "trace")
+    console.log("mkdir(%s, %d(%s))", path, mode, dec2Oct(mode));
   let node: Node | null = null;
   const p = path.split(pathSep);
   const name = p.pop();
@@ -410,7 +410,7 @@ const mkdir = (path: string, mode: number, cb: FuseCallback) => {
   }
   node = mkDir(p.join(pathSep), name, mode | constants.S_IFDIR);
   if (!node) {
-    console.log('create failed. No node');
+    console.log("create failed. No node");
     return process.nextTick(cb, Fuse.ENOENT);
   }
   const f = mkFd(node);
@@ -426,7 +426,7 @@ export const updateNodeContent = (
 ): number => {
   if (!content) {
     content = Buffer.alloc(0);
-  } else if (typeof content === 'string') {
+  } else if (typeof content === "string") {
     content = Buffer.from(content);
   }
   node.content = content;
@@ -449,11 +449,11 @@ const write = (
   pos: number,
   cb: FuseCallback
 ) => {
-  if (debugLevel === 'trace')
-    console.log('write(%s, %d, %d, %d)', path, fd, len, pos);
+  if (debugLevel === "trace")
+    console.log("write(%s, %d, %d, %d)", path, fd, len, pos);
   const node = getFdNode(fd);
   if (!node) {
-    if (debugLevel === 'trace') console.log('write fd not found!');
+    if (debugLevel === "trace") console.log("write fd not found!");
     return process.nextTick(cb, Fuse.EBADF);
   }
 
@@ -475,8 +475,8 @@ const write = (
   return process.nextTick(cb, ret < 0 ? ret : len);
 };
 const unlink = (path: string, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('unlink(%s)', path);
-  if (path === '.' || path === '..') {
+  if (debugLevel === "trace") console.log("unlink(%s)", path);
+  if (path === "." || path === "..") {
     return process.nextTick(cb, Fuse.EINVAL);
   }
   const node = getPathNode(path);
@@ -486,9 +486,9 @@ const unlink = (path: string, cb: FuseCallback) => {
   const parentPath = getPathFromName(path);
   const parentNode = getPathNode(parentPath);
   if (!parentNode) {
-    if (debugLevel === 'trace')
+    if (debugLevel === "trace")
       console.log(
-        'unlink unable to find parent node (%s, %s)',
+        "unlink unable to find parent node (%s, %s)",
         path,
         parentPath
       );
@@ -498,8 +498,8 @@ const unlink = (path: string, cb: FuseCallback) => {
   return process.nextTick(cb, 0);
 };
 const rmdir = (path: string, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('rmdir(%s)', path);
-  if (path === '.' || path === '..') {
+  if (debugLevel === "trace") console.log("rmdir(%s)", path);
+  if (path === "." || path === "..") {
     return process.nextTick(cb, Fuse.EINVAL);
   }
   const node = getPathNode(path);
@@ -512,9 +512,9 @@ const rmdir = (path: string, cb: FuseCallback) => {
   const parentPath = getPathFromName(path);
   const parentNode = getPathNode(parentPath);
   if (!parentNode) {
-    if (debugLevel === 'trace')
+    if (debugLevel === "trace")
       console.log(
-        'rmdir unable to find parent node (%s, %s)',
+        "rmdir unable to find parent node (%s, %s)",
         path,
         parentPath
       );
@@ -527,7 +527,7 @@ const rmdir = (path: string, cb: FuseCallback) => {
 };
 
 const rename = (src: string, dst: string, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('rename(%s, %s)', src, dst);
+  if (debugLevel === "trace") console.log("rename(%s, %s)", src, dst);
   const srcNode = getPathNode(src);
   if (!srcNode) {
     return process.nextTick(cb, Fuse.ENOENT);
@@ -535,9 +535,9 @@ const rename = (src: string, dst: string, cb: FuseCallback) => {
   const srcParentPath = getPathFromName(src);
   const srcParentNode: Node | null = getPathNode(srcParentPath);
   if (!srcParentNode) {
-    if (debugLevel === 'trace')
+    if (debugLevel === "trace")
       console.log(
-        'rename parent path node not found (%s, %s)',
+        "rename parent path node not found (%s, %s)",
         src,
         srcParentPath
       );
@@ -552,9 +552,9 @@ const rename = (src: string, dst: string, cb: FuseCallback) => {
   const dstParentPath = getPathFromName(dst);
   const dstParentNode: Node | null = getPathNode(dstParentPath);
   if (!dstParentNode) {
-    if (debugLevel === 'trace')
+    if (debugLevel === "trace")
       console.log(
-        'rename dst path to node failed to find parent (%s, %s, %s)',
+        "rename dst path to node failed to find parent (%s, %s, %s)",
         dst,
         dstParentPath,
         dstName
@@ -571,7 +571,7 @@ const rename = (src: string, dst: string, cb: FuseCallback) => {
 };
 
 const readlink = (path: string, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('readlink(%s)', path);
+  if (debugLevel === "trace") console.log("readlink(%s)", path);
   const node = getPathNode(path);
   if (!node || !node.content) {
     return process.nextTick(cb, Fuse.ENOENT);
@@ -580,9 +580,9 @@ const readlink = (path: string, cb: FuseCallback) => {
 };
 
 const symlink = (src: string, dst: string, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('symlink(%s, %s)', src, dst);
+  if (debugLevel === "trace") console.log("symlink(%s, %s)", src, dst);
   const p = dst.split(pathSep);
-  const name = p.pop() || '';
+  const name = p.pop() || "";
   if (!name) {
     return process.nextTick(cb, Fuse.EINVAL);
   }
@@ -591,7 +591,7 @@ const symlink = (src: string, dst: string, cb: FuseCallback) => {
 };
 
 const link = (src: string, dst: string, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('link(%s, %s)', src, dst);
+  if (debugLevel === "trace") console.log("link(%s, %s)", src, dst);
   const srcNode = getPathNode(src);
   if (!srcNode) {
     return process.nextTick(cb, Fuse.ENOENT);
@@ -601,7 +601,7 @@ const link = (src: string, dst: string, cb: FuseCallback) => {
   }
 
   const p = dst.split(pathSep);
-  const name = p.pop() || '';
+  const name = p.pop() || "";
   if (!name) {
     return process.nextTick(cb, Fuse.EINVAL);
   }
@@ -610,7 +610,7 @@ const link = (src: string, dst: string, cb: FuseCallback) => {
 };
 
 const chown = (path: string, uid: number, gid: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace') console.log('chown(%s, %d, %d)', path, uid, gid);
+  if (debugLevel === "trace") console.log("chown(%s, %d, %d)", path, uid, gid);
   const node = getPathNode(path);
   if (!node) {
     return process.nextTick(cb, Fuse.ENOENT);
@@ -622,8 +622,8 @@ const chown = (path: string, uid: number, gid: number, cb: FuseCallback) => {
 };
 
 const chmod = (path: string, mode: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace')
-    console.log('chmod(%s, %d(%s))', path, mode, dec2Oct(mode));
+  if (debugLevel === "trace")
+    console.log("chmod(%s, %d(%s))", path, mode, dec2Oct(mode));
   const node = getPathNode(path);
   if (!node) {
     return process.nextTick(cb, Fuse.ENOENT);
@@ -639,8 +639,8 @@ const utimens = (
   mtime: number,
   cb: FuseCallback
 ) => {
-  if (debugLevel === 'trace')
-    console.log('utimens(%s, %d, %d)', path, atime, mtime);
+  if (debugLevel === "trace")
+    console.log("utimens(%s, %d, %d)", path, atime, mtime);
   const node = getPathNode(path);
   if (!node) {
     return process.nextTick(cb, Fuse.ENOENT);
@@ -652,8 +652,8 @@ const utimens = (
 };
 
 const mknod = (path: string, mode: number, rdev: number, cb: FuseCallback) => {
-  if (debugLevel === 'trace')
-    console.log('mknod(%s, %d(%s), %d)', path, mode, dec2Oct(mode), rdev);
+  if (debugLevel === "trace")
+    console.log("mknod(%s, %d(%s), %d)", path, mode, dec2Oct(mode), rdev);
   const p = path.split(pathSep);
   const name = p.pop();
   if (!name) {
@@ -724,58 +724,68 @@ const ops = {
   utimens /* Called when the atime/mtime of a file is being changed */,
   mknod /* Called when the a new device file is being made */,
   statfs /* Called when the filesystem is being stat'ed */,
-  mnt: __dirname + '/mnt'
+  mnt: __dirname + "/mnt", /* host folder to mount fuse fs on  */
+  mkMnt: true /* set to true to create mount point if it does not exist */
 };
 
+if (ops.mkMnt && !existsSync(ops.mnt)) {
+  if (debugLevel === "trace") console.log("Creating mount point: " + ops.mnt);
+  try {
+    mkdirSync(ops.mnt);
+  } catch (err: any) {
+    console.error("Failed to create mount point!");
+    process.exit(1);
+  }
+}
+
 Fuse.isConfigured((err: Error, fuseIsConfigured: boolean) => {
-  if (debugLevel === 'trace') console.log({fuseIsConfigured});
+  if (debugLevel === "trace") console.log({ fuseIsConfigured });
   if (err) {
-    console.error({err});
+    console.error({ err });
     return;
   }
   if (!fuseIsConfigured) {
     Fuse.configure((err: Error) => {
       if (err) {
-        console.error({err});
+        console.error({ err });
+        process.exit(2);
       }
     });
   }
 });
 
+
 // console.log('UID=', process.getuid());
 const fuse = new Fuse(ops.mnt, ops, {
   debug: false,
-  // userId: 0,
-  // uid: 0,
-  // gid: 0,
   displayFolder: false,
   autoUnmount: true,
-  dev: true, // there is a known bug that dev param is ignored when autoUnmount is true
-  suid: true, // there is a known bug that suid param is ignored when autoUnmount is true
+  dev: true, // There is a known bug that dev param is ignored when autoUnmount is true. Requires privileged user
+  suid: true, // There is a known bug that suid param is ignored when autoUnmount is true. Requires privileged user
+  useIno: true, // Use inodes provided by our stat
   force: true,
   kernelCache: false,
   defaultPermissions: true,
-  useIno: true,
-  fsname: 'ParFS',
+  fsname: "ParFS"
   // allowRoot: true // requires privileged user
-  allowOther: true // requires privileged user
+  // allowOther: true // requires privileged user
 });
 fuse.mount((err?: Error) => {
   if (err) {
-    console.log('failed to mount filesystem on ' + fuse.mnt);
+    console.log("failed to mount filesystem on " + fuse.mnt);
     throw err;
   }
-  console.log('filesystem mounted on ' + fuse.mnt);
+  console.log("filesystem mounted on " + fuse.mnt);
 });
 
 // catch SIGINT and attempt to unmount
-process.once('SIGINT', async () => {
+process.once("SIGINT", async () => {
   // await unmountChroot(fuse.mnt);
   fuse.unmount((err?: Error) => {
     if (err) {
-      console.log('filesystem at ' + fuse.mnt + ' not unmounted', err);
+      console.log("filesystem at " + fuse.mnt + " not unmounted", err);
     } else {
-      console.log('filesystem at ' + fuse.mnt + ' unmounted');
+      console.log("filesystem at " + fuse.mnt + " unmounted");
     }
   });
 });
