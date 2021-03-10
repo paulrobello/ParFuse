@@ -1,4 +1,4 @@
-import got = require('got');
+const got = require('got');
 import { sep as pathSep } from 'path';
 import { mkFile, Node } from './fuseUtils';
 import { updateNodeContent } from './index';
