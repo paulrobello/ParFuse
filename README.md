@@ -37,3 +37,7 @@ lots of debug output. Trace mode is set by an environment variable named "trace"
 Have fun and please give feedback!
 
 
+### License ###
+
+This content is released under the (http://opensource.org/licenses/MIT) MIT License.
+
